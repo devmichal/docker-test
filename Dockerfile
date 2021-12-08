@@ -1,9 +1,10 @@
 FROM php:7.4-fpm
 
 # Install nginx
-RUN apt-get update && apt-get install --yes \
+RUN apt-get update && apt-get install --yes --no-install-recommends \
     gettext \
     nginx \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* \
     && service nginx stop \
     && rm \
     /etc/nginx/nginx.conf \
@@ -47,6 +48,7 @@ ENV NGINX_LOG_LEVEL="error"
 
 # FPM-FPM configuration
 COPY ./etc/php-fpm.conf /usr/local/etc/php-fpm.d/php-fpm.conf/
+ENV COMPOSER_ALLOW_SUPERUSER="1"
 ENV FPM_WORKERS_COUNT="2"
 ENV FPM_ACCESS_LOG="/proc/self/fd/2"
 ENV FPM_ERROR_LOG="/proc/self/fd/2"
@@ -62,9 +64,9 @@ ENV PHP_LOG_LEVEL="E_ERROR"
 COPY ./etc/entrypoint.bash /usr/local/bin/entrypoint.bash
 RUN chmod a+x /usr/local/bin/entrypoint.bash
 ENTRYPOINT ["entrypoint.bash"]
+CMD ["bash", "-c", "php-fpm --daemonize && nginx"]
 
-CMD ["bash"]
-EXPOSE 8014
+EXPOSE 8080
 HEALTHCHECK NONE
 WORKDIR /app
 
